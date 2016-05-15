@@ -82,6 +82,7 @@ public class ZookeeperMonitorSink extends AbstractSink implements Configurable{
 					log.info("Event:" + EventHelper.dumpEvent(event));
 				}
 				
+				/*
 				Map<String,String> headers = event.getHeaders();
 				long flow = 0;
 				if(headers.containsKey(Constants.FLOW_COUNT_HEADER)){
@@ -93,6 +94,7 @@ public class ZookeeperMonitorSink extends AbstractSink implements Configurable{
 				NodeLog nodeLog = new NodeLog();
 				nodeLog.setFlow(flow);
 				setFlowCountOnZookeeper(Constants.ZOOKEEPER_FLUME_NODE,nodeLog);
+				*/
 			}else{
 				status = Status.BACKOFF;
 			}
