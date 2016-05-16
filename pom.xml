@@ -6,7 +6,6 @@
   <artifactId>flume-ng-plugin</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
-
   <name>flume-ng-plugin</name>
   <url>http://maven.apache.org</url>
 
@@ -49,29 +48,23 @@
 	    <version>1.6.0</version>
 	</dependency>
 	
-	<!-- http://mvnrepository.com/artifact/org.keedio.flume.sink.hbase/csvSerializer -->
-	<dependency>
-	    <groupId>org.keedio.flume.sink.hbase</groupId>
-	    <artifactId>csvSerializer</artifactId>
-	    <version>0.0.2</version>
-	</dependency>
-	
-	<!-- http://mvnrepository.com/artifact/fr.figarocms.flume/flume-hbase-plugin -->
-	<dependency>
-	    <groupId>fr.figarocms.flume</groupId>
-	    <artifactId>flume-hbase-plugin</artifactId>
-	    <version>1.6</version>
-	</dependency>
-	
-
-   <!-- http://mvnrepository.com/artifact/org.apache.zookeeper/zookeeper -->
+    <!-- http://mvnrepository.com/artifact/org.apache.zookeeper/zookeeper -->
 	<dependency>
 	    <groupId>org.apache.zookeeper</groupId>
 	    <artifactId>zookeeper</artifactId>
 	    <version>3.4.6</version>
 	    <type>pom</type>
 	</dependency>
+    
+    <!-- http://mvnrepository.com/artifact/jline/jline -->
+	<dependency>
+	    <groupId>jline</groupId>
+	    <artifactId>jline</artifactId>
+	    <version>0.9.94</version>
+	</dependency>
 	
+	
+    
 	<dependency>
 	    <groupId>org.apache.curator</groupId>
 	    <artifactId>curator-framework</artifactId>
