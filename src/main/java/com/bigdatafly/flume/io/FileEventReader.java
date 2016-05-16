@@ -18,7 +18,7 @@ import com.bigdatafly.flume.common.LogEntry;
  * @author summer
  *
  */
-public class FileUtils {
+public class FileEventReader implements  EventReader{
 
 	private int capacity;
 	
@@ -132,8 +132,8 @@ public class FileUtils {
 	public static void main(String[] args){
 		
 		StringBuffer sb = new StringBuffer();
-		sb.append("[DEBUG] [09:09:23] ClientCnxn:756- Got ping response for sessionid: 0x453a360b3c6007f after 0ms");
-		sb.append("[DEBUG] [09:09:35] SockIOPool:1529- ++++ Size of avail pool for host (172.16.15.80:11215) = 5");
+		sb.append("23232[DEBUG] [09:09:23] ClientCnxn:756- Got ping response for sessionid: 0x453a360b3c6007f after 0ms");
+		sb.append("111[DEBUG] [09:09:35] SockIOPool:1529- ++++ Size of avail pool for host (172.16.15.80:11215) = 5");
 		sb.append("[INFO ] [09:09:00] MemCachedClient:1588- ++++ deserializing class com.odianyun.sc.model.dto.output.DomainInfoDTO");
 		sb.append("[DEBUG] [09:08:55] RequestMappingHandlerMapping:216- Returning handler method [public java.util.Map<java.lang.String, java.lang.Object> com.odianyun.back.merchant.web.write.action.enterpriseQualifications.EnterpriseQualificationsController.findEnterpriseQualificationsAuditStatus()]");
 		sb.append("[ERROR] [09:06:50] ExceptionFilter:156- "+"\n"+
@@ -143,7 +143,9 @@ public class FileUtils {
 		sb.append("[DEBUG] [09:09:23] ClientCnxn:756- Got ping response for sessionid: 0x453a360b3c6007f after 0ms");
 		sb.append("[DEBUG] [09:09:23] ClientCnxn:756- Got ping response for sessionid: 0x453a360b3c6007f after 0ms");
 		sb.append("[DEBUG] [09:09:23] ClientCnxn:756- Got ping response for sessionid: 0x453a360b3c6007f after 0ms");
-		new FileUtils().parseLogEntry(sb);
+		new FileEventReader().parseLogEntry(sb);
+		System.out.println("******************************************");
+		System.out.println(sb);
 	}
 	
 }

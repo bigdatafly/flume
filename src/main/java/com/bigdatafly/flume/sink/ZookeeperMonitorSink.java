@@ -4,7 +4,6 @@
 package com.bigdatafly.flume.sink;
 
 import java.util.Arrays;
-import java.util.Map;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.flume.Channel;
@@ -20,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bigdatafly.flume.common.Constants;
+import com.bigdatafly.flume.io.NodeLog;
 import com.bigdatafly.flume.utils.JsonUtils;
 import com.bigdatafly.flume.utils.OSUtils;
 import com.bigdatafly.flume.zookeeper.Zookeeper;
@@ -66,7 +66,6 @@ public class ZookeeperMonitorSink extends AbstractSink implements Configurable{
 		super.stop();
 	}
 
-	@Override
 	public Status process() throws EventDeliveryException {
 		
 		Status status = Status.READY;
@@ -110,7 +109,7 @@ public class ZookeeperMonitorSink extends AbstractSink implements Configurable{
 		return status;
 	}
 
-	@Override
+	
 	public void configure(Context context) {
 		
 		String zkConf = context.getString(Constants.ZOOKEEPER_CLUSTER_KEY,"VM-G101-07-73,VM-G101-07-74,VM-G101-07-75");
@@ -154,5 +153,5 @@ public class ZookeeperMonitorSink extends AbstractSink implements Configurable{
 		
 	}
 	
-	public MontiorInfo
+	
 }

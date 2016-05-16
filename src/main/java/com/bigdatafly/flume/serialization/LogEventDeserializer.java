@@ -5,6 +5,7 @@ package com.bigdatafly.flume.serialization;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.flume.Context;
@@ -12,7 +13,9 @@ import org.apache.flume.Event;
 import org.apache.flume.annotations.InterfaceAudience;
 import org.apache.flume.annotations.InterfaceStability;
 import org.apache.flume.event.EventHelper;
+import org.apache.flume.serialization.EventDeserializer;
 import org.apache.flume.serialization.EventSerializer;
+import org.apache.flume.serialization.ResettableInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,17 +28,17 @@ import com.google.common.base.Preconditions;
  */
 @InterfaceAudience.Public
 @InterfaceStability.Stable
-public class MontiorInfoSerializer implements EventSerializer {
+public class LogEventDeserializer implements EventDeserializer {
 
 	private final static Logger logger =
-		      LoggerFactory.getLogger(MontiorInfoSerializer.class);
+		      LoggerFactory.getLogger(LogEventDeserializer.class);
 
 
 	private final OutputStream out;
 	private final String flowCountHeader;
 	private final String hostNameHeader;
 	
-	private MontiorInfoSerializer(OutputStream out, Context ctx) {
+	private LogEventDeserializer(OutputStream out, Context ctx) {
 		
 	    this.out = out;
 	    this.flowCountHeader = ctx.getString(Constants.FLOW_COUNT_HEADER,
@@ -47,60 +50,50 @@ public class MontiorInfoSerializer implements EventSerializer {
 	    Preconditions.checkNotNull(this.hostNameHeader,"host name header must not be null");
 	  }
 	
-	public void afterCreate() throws IOException {
-		
-		// noop
-	}
 
-	public void afterReopen() throws IOException {
-		// noop
-		
-	}
 
-	public void write(Event event) throws IOException {
-		
-		Map<String,String> headers = event.getHeaders();
-		long flow = 0;
-		if(headers.containsKey(flowCountHeader)){
-			String strFlow = headers.get(flowCountHeader);
-			try{
-				flow = Long.parseLong(strFlow);
-			}catch(NumberFormatException ex){}
+	public static class Builder implements EventDeserializer.Builder {
+
+		public EventDeserializer build(Context context, ResettableInputStream in) {
+			
+			return null;
 		}
-	
-		
-		out.write(Long.toString(flow).getBytes());
-		//NodeLog nodeLog = new NodeLog();
-		//nodeLog.setFlow(flow);
-		//setFlowCountOnZookeeper(Constants.ZOOKEEPER_FLUME_NODE,nodeLog);
-		if(logger.isDebugEnabled())
-			logger.debug(" serializer event :" + EventHelper.dumpEvent(event));
-		
-	}
-
-	public void flush() throws IOException {
-		// noop
-		
-	}
-
-	public void beforeClose() throws IOException {
-		// noop
-		
-	}
-
-	public boolean supportsReopen() {
-		
-		return true;
-	}
-
-	public static class Builder implements EventSerializer.Builder {
-
-	    public EventSerializer build(Context context, OutputStream out) {
-	    	
-	    	MontiorInfoSerializer serializer = new MontiorInfoSerializer(out, context);
-	    	return serializer;
-	    }
 
 	  }
+
+
+
+	public Event readEvent() throws IOException {
+		
+		return readEvents(1);
+	}
+
+
+
+	public List<Event> readEvents(int numEvents) throws IOException {
+		
+		return null;
+	}
+
+
+
+	public void mark() throws IOException {
+		
+		
+	}
+
+
+
+	public void reset() throws IOException {
+		
+		
+	}
+
+
+
+	public void close() throws IOException {
+		
+		
+	}
 
 }

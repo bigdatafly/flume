@@ -2,7 +2,9 @@ package com.bigdatafly.flume.source;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -33,6 +35,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.bigdatafly.flume.common.Constants;
+import com.bigdatafly.flume.io.LogInfo;
+import com.bigdatafly.flume.io.PositionLog;
 import com.bigdatafly.flume.utils.OSUtils;
 
 public class FileTailSource extends AbstractSource implements Configurable,
@@ -114,7 +118,7 @@ public class FileTailSource extends AbstractSource implements Configurable,
 		log.debug("FileMonitorSource source stopped");
 	}
 
-	@Override
+	
 	public void configure(Context context) {
 		charset = Charset.defaultCharset();
 		decoder = charset.newDecoder();
@@ -195,6 +199,7 @@ public class FileTailSource extends AbstractSource implements Configurable,
 		public FileMonitorThread(int capacity) {
 			this.capacity = capacity;
 		}
+		/*
 		public  DataVo readFileByLine(int bufSize, FileChannel fcin, ByteBuffer rBuffer){ 
 			String enterStr = "\n"; 
 			try{ 
@@ -260,7 +265,7 @@ public class FileTailSource extends AbstractSource implements Configurable,
 		/**
 		 * a thread to check whether the file is modified
 		 */
-		@Override
+		
 		public void run() {
 			synchronized (exeLock) {
 				System.out.println("FileMonitorThread running ..." + capacity+"****eventSize****"+commitSize);

@@ -20,10 +20,13 @@ package com.bigdatafly.flume.zookeeper;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.api.CuratorEvent;
 import org.apache.curator.framework.api.CuratorEventType;
 import org.apache.curator.framework.api.CuratorListener;
@@ -40,6 +43,7 @@ import com.bigdatafly.flume.utils.PathUtils;
 import com.google.common.primitives.Bytes;
 
 
+
 /**
  * ZK simple wrapper
  * 
@@ -50,6 +54,33 @@ public class Zookeeper {
 
     private static Logger LOG = LoggerFactory.getLogger(Zookeeper.class);
 
+    public static CuratorFramework newCurator(Map conf, List<String> servers, Object port) {
+        return newCurator(conf, servers, port, "");
+    }
+
+    public static CuratorFramework newCuratorStarted(Map conf, List<String> servers, Object port, String root) {
+        CuratorFramework ret = newCurator(conf, servers, port);
+        ret.start();
+        return ret;
+    }
+
+    public static CuratorFramework newCurator(Map conf, List<String> servers, Object port, String root) {
+        List<String> serverPorts = new ArrayList<String>();
+        for (String zkServer : (List<String>) servers) {
+            serverPorts.add(zkServer + ":" + "");
+        }
+        String zkStr = StringUtils.join(serverPorts, ",") + root;
+        CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder();
+        setupBuilder(builder, zkStr, conf);
+        return builder.build();
+    }
+
+      protected static void setupBuilder(CuratorFrameworkFactory.Builder builder, String zkStr, Map conf) {
+        builder.connectString(zkStr)
+                .connectionTimeoutMs(5000)
+                .sessionTimeoutMs(5000).retryPolicy(new  StormBoundedExponentialBackoffRetry(100,1000,10)) ;
+    }
+    
     public CuratorFramework mkClient(Map conf, List<String> servers, Object port, String root) {
         return mkClient(conf, servers, port, root, new DefaultWatcherCallBack());
     }
@@ -61,10 +92,10 @@ public class Zookeeper {
      */
     public CuratorFramework mkClient(Map conf, List<String> servers, Object port, String root, final WatcherCallBack watcher) {
 
-        CuratorFramework fk = Utils.newCurator(conf, servers, port, root);
+        CuratorFramework fk = newCurator(conf, servers, port, root);
 
         fk.getCuratorListenable().addListener(new CuratorListener() {
-            @Override
+           
             public void eventReceived(CuratorFramework _fk, CuratorEvent e) throws Exception {
                 if (e.getType().equals(CuratorEventType.WATCHED)) {
                     WatchedEvent event = e.getWatchedEvent();
@@ -76,7 +107,7 @@ public class Zookeeper {
         });
 
         fk.getUnhandledErrorListenable().addListener(new UnhandledErrorListener() {
-            @Override
+            
             public void unhandledError(String msg, Throwable error) {
                 String errmsg = "Unrecoverable Zookeeper error, halting process: " + msg;
                 LOG.error(errmsg, error);

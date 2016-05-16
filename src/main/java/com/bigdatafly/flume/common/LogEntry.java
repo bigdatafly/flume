@@ -36,18 +36,12 @@ public class LogEntry {
 	public static void main(String[] args){
 		
 		List<String> logTypes = new ArrayList<String>();
-		
 		List<LogLevel> levels = LogLevel.getLog4JLevels();
-		
 		for(LogLevel level : levels)
 			logTypes.add((String.format("[%-5s]", level)));
 		
 		String s = "Size of avail pool [INFO ] [09:09:35] SockIOPool:1578- ++++ Size of avail pool for host (172.16.15.80:11215) = 5";
-		
 		int pos = StringUtils.indexOfAny(s,logTypes.toArray(new String[0]) );
-		
-		
-		
 		System.out.println(pos);
 		
 	}
