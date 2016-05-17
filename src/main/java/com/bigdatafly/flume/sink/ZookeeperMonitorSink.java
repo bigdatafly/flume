@@ -4,6 +4,7 @@
 package com.bigdatafly.flume.sink;
 
 import java.util.Arrays;
+import java.util.Map;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.flume.Channel;
@@ -21,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import com.bigdatafly.flume.common.Constants;
 import com.bigdatafly.flume.io.NodeLog;
 import com.bigdatafly.flume.utils.JsonUtils;
-import com.bigdatafly.flume.utils.OSUtils;
 import com.bigdatafly.flume.zookeeper.Zookeeper;
 import com.google.common.base.Preconditions;
 
@@ -81,7 +81,7 @@ public class ZookeeperMonitorSink extends AbstractSink implements Configurable{
 					log.info("Event:" + EventHelper.dumpEvent(event));
 				}
 				
-				/*
+				
 				Map<String,String> headers = event.getHeaders();
 				long flow = 0;
 				if(headers.containsKey(Constants.FLOW_COUNT_HEADER)){
@@ -90,10 +90,16 @@ public class ZookeeperMonitorSink extends AbstractSink implements Configurable{
 						flow = Long.parseLong(strFlow);
 					}catch(NumberFormatException ex){}
 				}
+				
+				String host="Unknown Host";
+				if(headers.containsKey(Constants.HOST_NAME_HEADER))
+					host = headers.get(Constants.HOST_NAME_HEADER);
 				NodeLog nodeLog = new NodeLog();
 				nodeLog.setFlow(flow);
+				nodeLog.setHost(host);
+				
 				setFlowCountOnZookeeper(Constants.ZOOKEEPER_FLUME_NODE,nodeLog);
-				*/
+				
 			}else{
 				status = Status.BACKOFF;
 			}
@@ -122,12 +128,12 @@ public class ZookeeperMonitorSink extends AbstractSink implements Configurable{
 
 	public void setFlowCountOnZookeeper(String parent, NodeLog nodeLog) throws Exception{
 		
-		String hostname =  OSUtils.getHostName(OSUtils.getInetAddress());
+		String hostname =  nodeLog.getHost();
 		String path = parent + "/" + hostname;
 		
 		//NodeLog nodeLog = new NodeLog();
 		//nodeLog.setFlow(data);
-		nodeLog.setHost(hostname);
+		//nodeLog.setHost(hostname);
 		long flow = 0;
 		try {
 			if(!zookeeper.existsNode(zk, path, true)){

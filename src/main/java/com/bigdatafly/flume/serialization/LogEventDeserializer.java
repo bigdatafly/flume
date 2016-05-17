@@ -65,7 +65,7 @@ public class LogEventDeserializer implements EventDeserializer {
 
 	public Event readEvent() throws IOException {
 		
-		return readEvents(1);
+		return null;
 	}
 
 

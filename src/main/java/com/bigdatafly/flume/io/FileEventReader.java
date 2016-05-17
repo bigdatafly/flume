@@ -3,16 +3,28 @@
  */
 package com.bigdatafly.flume.io;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.flume.Event;
+import org.apache.flume.event.EventBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.bigdatafly.flume.common.DataVo;
+import com.bigdatafly.flume.common.Constants;
 import com.bigdatafly.flume.common.LogEntry;
+import com.bigdatafly.flume.log.LogEvent;
+import com.bigdatafly.flume.utils.OSUtils;
+
 
 /**
  * @author summer
@@ -20,75 +32,178 @@ import com.bigdatafly.flume.common.LogEntry;
  */
 public class FileEventReader implements  EventReader{
 
-	private int capacity;
+	private static final Logger logger = LoggerFactory
+			.getLogger(FileEventReader.class);
 	
-	public  DataVo readFileByLine(int bufSize, FileChannel fcin, ByteBuffer rBuffer){ 
-		String enterStr = "\n"; 
-		try{ 
-		byte[] bs = new byte[bufSize]; 
+	private File monitorFile;
+	private int  capacity;
+	private int bufSize;
+	private String positionTrackerFile;
+	private PositionTracker positionTracker;
 
-		int size = 0; 
-		StringBuffer strBuf = new StringBuffer(""); 
-		int buf_size=0;
-		int line_count=0;
-		//while((size = fcin.read(buffer)) != -1){ 
-		List<LogEntry> lineList=new ArrayList<LogEntry>();
-		while(fcin.read(rBuffer) != -1){ 
-		      int rSize = rBuffer.position(); 
-		      rBuffer.rewind(); 
-		      rBuffer.get(bs); 
-		      rBuffer.clear(); 
-		      String tempString = new String(bs, 0, rSize); 
-		      buf_size+=tempString.getBytes().length;
-		      
-		      strBuf.append(tempString);
-		      
-		      int fromIndex = 0; 
-		      int endIndex = 0; 
-		      
-		      while((endIndex = tempString.indexOf(enterStr, fromIndex)) != -1){ 
-		       String line = tempString.substring(fromIndex, endIndex); 
-		       line = new String(strBuf.toString() + line); 
-		       strBuf.delete(0, strBuf.length()); 
-		       fromIndex = endIndex + 1; 	
-		       size+=line.getBytes().length+1;
-		       line_count++;
-		       //lineList.add(line);
-		       if(line_count>capacity){
-		    	   DataVo vo =new DataVo();
-		    	   vo.setDataSize(size);
-		    	   //vo.setLineList(lineList);
-		    	   return vo;
-		       }
-		      } 
-		      if(rSize > tempString.length()){ 
-		      strBuf.append(tempString.substring(fromIndex, tempString.length())); 
-		    //  size+=strBuf.toString().getBytes().length;
-		      }else{ 
-		      strBuf.append(tempString.substring(fromIndex, rSize)); 
-		    //  size+=strBuf.toString().getBytes().length;
-		      } 
-		     
-		    
-		}
-		 System.out.println("**********end**********"+size);
-		 if(lineList.size()>0){
-			  DataVo vo =new DataVo();
-	    	   vo.setDataSize(size);
-	    	   //vo.setLineList(lineList);
-	    	   return vo;
-    	   }else
-    		   return null;
+	private ByteBuffer rBuffer;
+	
+	private static final int DEFAULT_CAPACITY = 200;  
+	private static final int DEFAULT_BUF_SIZE = 512;
+	private static final String DEFAULT_POSITION_TRACKER_FILE_PATH = "/tmp";
+	
+	static final String ip_addr=OSUtils.getHostIp(OSUtils.getInetAddress());
+	static final String host_name = OSUtils.getHostName(OSUtils.getInetAddress());
+	
+	public FileEventReader(File monitorFile){
 		
-		} catch (IOException e) { 
-		// TODO Auto-generated catch block 
-		e.printStackTrace(); 
-			return null;
-		} 
+		this(monitorFile,DEFAULT_CAPACITY);
+	}
+	
+	public FileEventReader(File monitorFile,int capacity){
+		
+		this(monitorFile,DEFAULT_POSITION_TRACKER_FILE_PATH ,capacity,DEFAULT_BUF_SIZE);
 		
 	}
 	
-	private List<LogEntry> parseLogEntry(StringBuffer sb){
+	public FileEventReader(File monitorFile,String positionTrackerFile){
+		
+		this(monitorFile,positionTrackerFile,DEFAULT_CAPACITY,DEFAULT_BUF_SIZE);
+	}
+	
+	public FileEventReader(File monitorFile,String positionTrackerFile,int capacity,int bufSize){
+		
+		this.monitorFile = monitorFile;
+		this.capacity = capacity>0?capacity:DEFAULT_BUF_SIZE;
+		this.positionTrackerFile = positionTrackerFile;
+		this.positionTracker = getDefaultPositionTracker(this.positionTrackerFile);
+		this.bufSize = bufSize>0?bufSize:DEFAULT_BUF_SIZE;
+		this.rBuffer = ByteBuffer.allocate(bufSize);
+	}
+	
+	
+	static  PositionTracker getDefaultPositionTracker(File file){
+		
+		PositionTracker positionTracker = new PositionTracker(file);
+		positionTracker.init();
+		return positionTracker;
+	}
+	
+	static  PositionTracker getDefaultPositionTracker(String file){
+		
+		PositionTracker positionTracker = new PositionTracker(file);
+		positionTracker.init();
+		return positionTracker;
+	}
+	
+	
+	
+	public PositionTracker getPositionTracker() {
+		return positionTracker;
+	}
+
+	public List<Event> readEvents() {
+		
+		List<Event> events = new ArrayList<Event>();
+		RandomAccessFile coreFile = null;
+		
+		try{
+			coreFile = new RandomAccessFile(monitorFile, "r");					
+			FileChannel coreFileChannel = coreFile.getChannel();
+			List<LogEntry> logEntries = readLogEntry(coreFileChannel,positionTracker,rBuffer);
+			
+			for(LogEntry logEntry : logEntries){
+				
+				Event event = convert(logEntry);
+				events.add(event);
+			}
+			
+		}catch(FileNotFoundException ex){
+			
+			if(logger.isDebugEnabled())
+				logger.debug("monitorFile FileNotFoundException", ex);
+			//return null;
+		}finally{
+			try {
+				if(coreFile!=null)
+					coreFile.close();
+			} catch (IOException e) {
+				
+				if(logger.isDebugEnabled())
+					logger.debug("monitorFile close throw IOException", e);
+			}
+		}
+		return events;	
+	}
+
+	public Event convert(final LogEntry logEntry) {
+		
+		Map<String,String> headers = new HashMap<String,String>();
+		headers.put(LogEvent.LOG_LEVEL_KEY, logEntry.getLevel());
+		headers.put(LogEvent.LOG_TIME_KEY, logEntry.getLogtime());
+		headers.put(Constants.HOST_NAME_HEADER, host_name);
+		long dataLen = 0;
+		String log = logEntry.getLog();
+		dataLen = (log==null)?0:log.length();
+		headers.put(Constants.FLOW_COUNT_HEADER, String.valueOf(dataLen));
+		StringBuffer body = new StringBuffer();
+	    body.append(ip_addr);
+	    body.append(log);
+		
+		return EventBuilder.withBody(body.toString().getBytes(), headers);
+	}
+	
+	private List<LogEntry> readLogEntry(FileChannel fcin, PositionTracker positionTracker,ByteBuffer rBuffer){
+		
+		return readLogFile(fcin,positionTracker,rBuffer);
+	}
+	
+	private  List<LogEntry> readLogFile(FileChannel fcin, PositionTracker positionTracker,ByteBuffer rBuffer){ 
+		
+		List<LogEntry> logEntries =new ArrayList<LogEntry>();
+		byte[] bs = new byte[bufSize]; 
+		int buf_size = 0; 
+		long position = positionTracker.getPosition();
+		StringBuffer strBuf = new StringBuffer(""); 
+		int log_capacity = 0;
+		try{ 
+			
+			fcin.position(position);
+			
+			while((buf_size=fcin.read(rBuffer)) != -1){ 
+				  
+				 if(log_capacity > capacity || buf_size == 0){
+					rBuffer.clear(); 
+					break;
+				 }
+				
+				 
+			      int rSize = rBuffer.position(); 
+			      //rBuffer.rewind(); 
+			      rBuffer.flip(); 
+			      rBuffer.get(bs,0,rSize); 
+			      rBuffer.clear(); 
+			      String tempString = new String(bs, 0, rSize); 
+			     
+			      
+				  strBuf.append(tempString);
+				  List<LogEntry> logs = parseLogEntry(strBuf); 
+				  logEntries.addAll(logs);
+				  log_capacity =  logEntries.size();
+			     
+			      position += buf_size;
+			     
+			      positionTracker.mark(position);
+			      positionTracker.save();
+			}	
+		
+		} catch (IOException e) { 
+			
+			e.printStackTrace(); 
+			positionTracker.reset();
+			positionTracker.save();
+		} 
+		
+		return logEntries;
+		
+	}
+	
+	public List<LogEntry> parseLogEntry(StringBuffer sb){
 		
 		List<LogEntry> logEntries =new ArrayList<LogEntry>();
 		
@@ -96,6 +211,7 @@ public class FileEventReader implements  EventReader{
 		int endIndex = 0;
 		
 		while(true){
+			  
 				String tempStr = sb.toString();
 				int len = tempStr.length();
 				
@@ -114,8 +230,13 @@ public class FileEventReader implements  EventReader{
 						}else{
 							
 							String strLogEntry = StringUtils.mid(tempStr, beginIndex, LogEntry.LOG_LEVEL_LEN+endIndex);
-							System.out.println("{"+strLogEntry+"}");
+							if(logger.isDebugEnabled())
+								logger.debug("{"+strLogEntry+"}");
+							LogEntry logEntry = convert(strLogEntry);
+							if(logEntry!=null)
+								logEntries.add(logEntry);
 							sb.delete(0, beginIndex + LogEntry.LOG_LEVEL_LEN+endIndex);
+							
 						}
 					}
 					
@@ -124,28 +245,88 @@ public class FileEventReader implements  EventReader{
 				}
 				
 		}
-		
-		
+		/*
+		 if(rSize > tempString.length()){ 
+		      strBuf.append(tempString.substring(fromIndex, tempString.length())); 
+		    //  size+=strBuf.toString().getBytes().length;
+		      }else{ 
+		      strBuf.append(tempString.substring(fromIndex, rSize)); 
+		    //  size+=strBuf.toString().getBytes().length;
+	    } 
+	    */
 		return logEntries;
 	}
 	
-	public static void main(String[] args){
+	static final String LOG_SPACE_DELIMITER = " ";
+	
+	static LogEntry convert(final String log){
+
+			if(StringUtils.isEmpty(log))
+				return null;
+			int pos = 0;
+			pos = StringUtils.indexOfAny(log, LogEntry.logLevels);
+			if(pos == -1)
+				return null;
+			
+			String level = StringUtils.substring(log, pos, pos + LogEntry.LOG_LEVEL_LEN);
+			String tempStr = StringUtils.substring(log,pos + LogEntry.LOG_LEVEL_LEN+LOG_SPACE_DELIMITER.length());
+			pos = StringUtils.indexOf(tempStr, LOG_SPACE_DELIMITER);
+			if(pos == -1)
+				return null;
+			String time = StringUtils.substring(tempStr,0,pos);
+			if(StringUtils.length(time) ==0 || StringUtils.length(time) < LogEntry.LOG_TIME_LEN)
+				return null;
+			LogEntry entry = new LogEntry();
+			entry.setLevel(level);
+			entry.setLogtime(time);
+			entry.setLog(log);
+			return entry;
 		
-		StringBuffer sb = new StringBuffer();
-		sb.append("23232[DEBUG] [09:09:23] ClientCnxn:756- Got ping response for sessionid: 0x453a360b3c6007f after 0ms");
-		sb.append("111[DEBUG] [09:09:35] SockIOPool:1529- ++++ Size of avail pool for host (172.16.15.80:11215) = 5");
-		sb.append("[INFO ] [09:09:00] MemCachedClient:1588- ++++ deserializing class com.odianyun.sc.model.dto.output.DomainInfoDTO");
-		sb.append("[DEBUG] [09:08:55] RequestMappingHandlerMapping:216- Returning handler method [public java.util.Map<java.lang.String, java.lang.Object> com.odianyun.back.merchant.web.write.action.enterpriseQualifications.EnterpriseQualificationsController.findEnterpriseQualificationsAuditStatus()]");
-		sb.append("[ERROR] [09:06:50] ExceptionFilter:156- "+"\n"+
-				"				  org.springframework.web.util.NestedServletException: Request processing failed; nested exception is java.lang.reflect.UndeclaredThrowableException"+"\n"+
-				"at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:927)"+"\n"+
-				"at org.springframework.web.servlet.FrameworkServlet.doPost(FrameworkServlet.java:822)");
-		sb.append("[DEBUG] [09:09:23] ClientCnxn:756- Got ping response for sessionid: 0x453a360b3c6007f after 0ms");
-		sb.append("[DEBUG] [09:09:23] ClientCnxn:756- Got ping response for sessionid: 0x453a360b3c6007f after 0ms");
-		sb.append("[DEBUG] [09:09:23] ClientCnxn:756- Got ping response for sessionid: 0x453a360b3c6007f after 0ms");
-		new FileEventReader().parseLogEntry(sb);
-		System.out.println("******************************************");
-		System.out.println(sb);
 	}
 	
+	public static class Builder{
+		
+		private File monitorFile;
+		private int  capacity;
+		private int bufSize;
+		private String positionTrackerFile;
+		
+		public  Builder(){
+			
+			this.capacity = DEFAULT_CAPACITY;
+			this.bufSize = DEFAULT_BUF_SIZE;
+			this.positionTrackerFile = DEFAULT_POSITION_TRACKER_FILE_PATH; 
+			
+		}
+		
+		public Builder setMonitorFile(File monitorFile){
+			
+			this.monitorFile = monitorFile;
+			return this;
+		}
+		
+		public  Builder setCapacity(int  capacity){
+			
+			this.capacity = capacity;
+			return this;
+		}
+		
+		public  Builder setBufSize(int  bufSize){
+			
+			this.bufSize = bufSize;
+			return this;
+		}
+		
+		public  Builder setPositionTrackerFile(String  positionTrackerFile){
+			
+			this.positionTrackerFile = positionTrackerFile;
+			return this;
+		}
+		
+		public FileEventReader builder(){
+			return new FileEventReader(monitorFile,positionTrackerFile,capacity,bufSize);
+		}
+		
+	}
+
 }
