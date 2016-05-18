@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.bigdatafly.flume.io;
+package com.bigdatafly.flume.zookeeper;
 
 import java.io.Serializable;
 

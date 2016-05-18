@@ -20,8 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bigdatafly.flume.common.Constants;
-import com.bigdatafly.flume.io.NodeLog;
 import com.bigdatafly.flume.utils.JsonUtils;
+import com.bigdatafly.flume.zookeeper.NodeLog;
 import com.bigdatafly.flume.zookeeper.Zookeeper;
 import com.google.common.base.Preconditions;
 
