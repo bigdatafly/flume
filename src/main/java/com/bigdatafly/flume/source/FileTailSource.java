@@ -1,11 +1,7 @@
 package com.bigdatafly.flume.source;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -13,7 +9,6 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,26 +16,21 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.flume.Context;
 import org.apache.flume.Event;
 import org.apache.flume.EventDrivenSource;
 import org.apache.flume.channel.ChannelProcessor;
 import org.apache.flume.conf.Configurable;
-import org.apache.flume.event.EventBuilder;
 import org.apache.flume.instrumentation.SourceCounter;
 import org.apache.flume.source.AbstractSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
 import com.bigdatafly.flume.common.Constants;
 import com.bigdatafly.flume.io.EventReader;
 import com.bigdatafly.flume.io.FileEventReader;
-import com.bigdatafly.flume.io.LogInfo;
-import com.bigdatafly.flume.io.PositionLog;
 import com.bigdatafly.flume.io.PositionTracker;
-import com.bigdatafly.flume.utils.OSUtils;
+import com.google.common.base.Preconditions;
 
 public class FileTailSource extends AbstractSource implements Configurable,
 		EventDrivenSource {
