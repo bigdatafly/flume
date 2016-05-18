@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.bigdatafly.flume.sink;
+package com.bigdatafly.flume.io;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import com.bigdatafly.flume.common.Constants;
 import com.bigdatafly.flume.io.NodeLog;
 import com.bigdatafly.flume.utils.JsonUtils;
-import com.bigdatafly.flume.utils.OSUtils;
 import com.bigdatafly.flume.zookeeper.Zookeeper;
 import com.google.common.base.Preconditions;
 
@@ -39,16 +38,9 @@ public class ZookeeperMonitorSink extends AbstractSink implements Configurable{
 	private Zookeeper zookeeper = new Zookeeper();
 	private CuratorFramework zk;
 	private String[] zkServers;
-	private long dataFlow = 0L ;
-	private String hostName ;
-	private String currentNode;
-	private Long   updateInterval;
-	private Long   lastUpdateTime = 0L;
-	private final static long DEFAULT_UPDATE_INTERVAL = 10;
 	
 	@Override
 	public synchronized void start() {
-		
 		
 		try {
 			if(zk == null)
@@ -56,13 +48,10 @@ public class ZookeeperMonitorSink extends AbstractSink implements Configurable{
 			if(!zookeeper.existsNode(zk, Constants.ZOOKEEPER_FLUME_NODE, true)){
 				zookeeper.createNode(zk, Constants.ZOOKEEPER_FLUME_NODE, Constants.ZOOKEEPER_FLUME_NODE.getBytes());
 			}
-			
-			dataFlow = getFlowCount();
 		} catch (Exception e) {
 			
 			e.printStackTrace();
 		}
-		
 		
 		super.start();
 		
@@ -77,12 +66,9 @@ public class ZookeeperMonitorSink extends AbstractSink implements Configurable{
 		super.stop();
 	}
 
-
 	public Status process() throws EventDeliveryException {
 		
 		Status status = Status.READY;
-		Long currentDataTime = System.currentTimeMillis();
-		
 		Channel channel = getChannel();
 		Transaction transaction = channel.getTransaction();
 		Event event = null;
@@ -91,9 +77,10 @@ public class ZookeeperMonitorSink extends AbstractSink implements Configurable{
 			event = channel.take();
 			if(event !=null){
 				
-				if(log.isDebugEnabled()){
-					log.debug("Event:" + EventHelper.dumpEvent(event));
+				if(log.isInfoEnabled()){
+					log.info("Event:" + EventHelper.dumpEvent(event));
 				}
+				
 				
 				Map<String,String> headers = event.getHeaders();
 				long flow = 0;
@@ -104,15 +91,14 @@ public class ZookeeperMonitorSink extends AbstractSink implements Configurable{
 					}catch(NumberFormatException ex){}
 				}
 				
-				dataFlow += flow;
-			    
-				if(currentDataTime - lastUpdateTime > updateInterval){
-					
-					setFlowCountOnZookeeper(zookeeper,zk,dataFlow);
-					lastUpdateTime = currentDataTime;
-				}
+				String host="Unknown Host";
+				if(headers.containsKey(Constants.HOST_NAME_HEADER))
+					host = headers.get(Constants.HOST_NAME_HEADER);
+				NodeLog nodeLog = new NodeLog();
+				nodeLog.setFlow(flow);
+				nodeLog.setHost(host);
 				
-				//setFlowCountOnZookeeper(zookeeper,zk,dataFlow);
+				setFlowCountOnZookeeper(Constants.ZOOKEEPER_FLUME_NODE,nodeLog);
 				
 			}else{
 				status = Status.BACKOFF;
@@ -129,67 +115,41 @@ public class ZookeeperMonitorSink extends AbstractSink implements Configurable{
 		return status;
 	}
 
-
+	
 	public void configure(Context context) {
 		
-		String zkConf = context.getString(Constants.ZOOKEEPER_CLUSTER_KEY,"localhost");
+		String zkConf = context.getString(Constants.ZOOKEEPER_CLUSTER_KEY,"VM-G101-07-73,VM-G101-07-74,VM-G101-07-75");
 		
-		if(log.isDebugEnabled())
-			log.debug("zkConf:" + zkConf );
+		log.debug("zkConf:" + zkConf );
 		zkServers = zkConf.split(",");
 		Preconditions.checkArgument(zkServers != null,
 				"the zookeeper servers parameters can not be null !");
-		
-		hostName = OSUtils.getHostName(OSUtils.getInetAddress());
-		Preconditions.checkArgument(hostName != null,
-				"the local host name can not be null !");
-		
-		currentNode = Constants.ZOOKEEPER_FLUME_NODE + "/" + hostName;
-		
-		
-		long interval = context.getLong(Constants.UPDATE_INTERVAL_KEY,DEFAULT_UPDATE_INTERVAL);
-		
-		if(interval<1)
-			interval = DEFAULT_UPDATE_INTERVAL;
-		updateInterval = interval*1000;
-		
-		lastUpdateTime = System.currentTimeMillis();
 	}
 
-	private long getFlowCount() throws Exception{
+	public void setFlowCountOnZookeeper(String parent, NodeLog nodeLog) throws Exception{
 		
-		long dataFlow = 0L;
-		String path = currentNode;
-		if(!zookeeper.existsNode(zk, path, true)){
-			
-			zookeeper.createNode(zk, path, JsonUtils.toJson(new NodeLog(hostName)).getBytes(),CreateMode.EPHEMERAL);
-			
-		}else{
+		String hostname =  nodeLog.getHost();
+		String path = parent + "/" + hostname;
+		
+		//NodeLog nodeLog = new NodeLog();
+		//nodeLog.setFlow(data);
+		//nodeLog.setHost(hostname);
+		long flow = 0;
+		try {
+			if(!zookeeper.existsNode(zk, path, true)){
+				zookeeper.createNode(zk, path, "node-".concat(hostname).getBytes(),CreateMode.EPHEMERAL);
+			}
 			byte[] byteLog = zookeeper.getData(zk, path, true);
 			
 			if(byteLog !=null){
 				String logJson = new String(byteLog);
 				NodeLog log = JsonUtils.fromJson(logJson, NodeLog.class);
 				if(log!=null)
-					dataFlow = log.getFlow();
+					flow = log.getFlow();
 				
 			}
-		}
-		
-		return dataFlow;
-		
-	}
-	
-	public void setFlowCountOnZookeeper(Zookeeper zookeeper,CuratorFramework zk,long dataFlow) throws Exception{
-		
-		String path = currentNode;
-		
-		try {
 			
-			long flow =  dataFlow ;
-			NodeLog nodeLog = new NodeLog();
-			nodeLog.setHost(hostName);
-			nodeLog.setFlow(flow);
+			nodeLog.setFlow(nodeLog.getFlow()+flow);
 			zookeeper.setData(zk, path, JsonUtils.toJson(nodeLog).getBytes());
 		} catch (Exception e) {
 			log.error("save data into Zookeeper Error", e);
@@ -198,4 +158,6 @@ public class ZookeeperMonitorSink extends AbstractSink implements Configurable{
 		
 		
 	}
+	
+	
 }
