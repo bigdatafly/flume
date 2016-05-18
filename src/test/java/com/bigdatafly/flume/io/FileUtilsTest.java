@@ -9,7 +9,7 @@ import java.util.List;
 import org.apache.flume.Event;
 import org.apache.flume.event.EventHelper;
 
-import com.bigdatafly.flume.common.LogEntry;
+import com.bigdatafly.flume.log.LogEntry;
 
 /**
  * @author summer

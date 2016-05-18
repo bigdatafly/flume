@@ -8,8 +8,6 @@ import java.util.Map;
 
 import org.apache.flume.Event;
 
-import com.bigdatafly.flume.common.LogEntry;
-
 /**
  * @author summer
  *

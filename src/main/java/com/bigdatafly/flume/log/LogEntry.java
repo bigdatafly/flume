@@ -1,4 +1,4 @@
-package com.bigdatafly.flume.common;
+package com.bigdatafly.flume.log;
 
 import java.util.ArrayList;
 import java.util.List;

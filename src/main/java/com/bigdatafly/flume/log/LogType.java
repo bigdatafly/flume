@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.bigdatafly.flume.common;
+package com.bigdatafly.flume.log;
 
 /**
  * @author summer

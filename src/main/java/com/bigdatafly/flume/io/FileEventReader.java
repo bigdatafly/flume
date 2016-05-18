@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bigdatafly.flume.common.Constants;
-import com.bigdatafly.flume.common.LogEntry;
+import com.bigdatafly.flume.log.LogEntry;
 import com.bigdatafly.flume.log.LogEvent;
 import com.bigdatafly.flume.utils.OSUtils;
 
