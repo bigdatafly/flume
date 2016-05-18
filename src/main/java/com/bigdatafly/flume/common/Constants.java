@@ -25,5 +25,7 @@ public class Constants {
 	public static final String HOST_NAME_HEADER = "hostname";
 	
 	public static final String FLOW_COUNT_HEADER = "flowcount";
+
+	public static final String UPDATE_INTERVAL_KEY = "updateInterval";
 	
 }

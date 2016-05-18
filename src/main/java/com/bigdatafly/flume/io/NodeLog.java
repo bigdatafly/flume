@@ -28,6 +28,12 @@ public class NodeLog implements Serializable{
 		time = System.currentTimeMillis();
 	}
 	
+	public NodeLog(String host){
+		
+		this.host = host;
+		time = System.currentTimeMillis();
+	}
+	
 	public String getHost() {
 		return host;
 	}
