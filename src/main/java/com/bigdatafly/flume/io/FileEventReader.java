@@ -132,6 +132,7 @@ public class FileEventReader implements  EventReader{
 			//return null;
 		}finally{
 			try {
+				
 				if(coreFile!=null)
 					coreFile.close();
 			} catch (IOException e) {

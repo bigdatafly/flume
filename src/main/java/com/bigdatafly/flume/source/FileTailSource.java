@@ -222,6 +222,9 @@ public class FileTailSource extends AbstractSource implements Configurable,
 						 while(true){
 									
 							    List<Event> events = reader.readEvents();
+							    
+							    log.debug("*********************event:"+events+"*************************");
+							    
 							    if(events ==null || events.isEmpty()){ 
 							    	commitSize = 0;
 									break;
