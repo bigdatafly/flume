@@ -198,47 +198,50 @@ public class FileTailSource extends AbstractSource implements Configurable,
 		
 		public void run() {
 			synchronized (exeLock) {
-				System.out.println("FileMonitorThread running ..." + capacity+"****eventSize****"+commitSize);
+				//System.out.println("FileMonitorThread running ..." + capacity+"****eventSize****"+commitSize);
 				// coreFile = new File(monitorFilePath);
 				long nowModified = coreFile.lastModified();
 				
 				// the file has been changed
 				if (lastMod != nowModified) {
 					
-					lastMod = nowModified;
-					nowFileSize = coreFile.length();
+						lastMod = nowModified;
+						nowFileSize = coreFile.length();
 
 						log.debug(
 								"The Last coreFileSize {},now coreFileSize {}",
 								lastFileSize, nowFileSize);
 						// it indicated the file is rolled by log4j
-			    if (nowFileSize <= lastFileSize) {
-							log.debug("The file size is changed to be lower,it indicated that the file is rolled by log4j.");
-							positionValue = 0L;
-				}
+					    if (nowFileSize <= lastFileSize) {
+									log.debug("The file size is changed to be lower,it indicated that the file is rolled by log4j.");
+									positionValue = 0L;
+						}
 						lastFileSize = nowFileSize;
 
-				 while(true){
-							
-							List<Event> events = reader.readEvents();
-							if(events ==null || events.isEmpty()) 
-								break;
-							channelProcessor.processEventBatch(events);
-							
-				 }
+						 while(true){
+									
+							    List<Event> events = reader.readEvents();
+							    if(events ==null || events.isEmpty()){ 
+							    	commitSize = 0;
+									break;
+							    }
+							    
+							    commitSize = events.size();
+								channelProcessor.processEventBatch(events);
+								sourceCounter.addToEventAcceptedCount(commitSize);
+								sourceCounter.incrementAppendBatchAcceptedCount();
+						 }
 
-					
-					counter++;
-					if (counter % Constants.POSITION_SAVE_COUNTER == 0) {
-						log.debug(
-								Constants.POSITION_SAVE_COUNTER
-										+ " times file modified checked,save the position Value {} into Disk file",
-								positionValue);
-						reader.getPositionTracker().save();
-						
-					}
-					
-					
+					    
+						counter++;
+						if (counter % Constants.POSITION_SAVE_COUNTER == 0) {
+							log.debug(
+									Constants.POSITION_SAVE_COUNTER
+											+ " times file modified checked,save the position Value {} into Disk file",
+									positionValue);
+							reader.getPositionTracker().save();
+							
+						}
 				}
 			}
 		}
