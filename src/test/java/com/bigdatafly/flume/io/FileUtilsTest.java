@@ -4,11 +4,14 @@
 package com.bigdatafly.flume.io;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.flume.Event;
-import org.apache.flume.event.EventHelper;
+import org.apache.log4j.lf5.LogLevel;
 
+import com.bigdatafly.flume.common.Constants;
 import com.bigdatafly.flume.log.LogEntry;
 
 /**
@@ -18,6 +21,21 @@ import com.bigdatafly.flume.log.LogEntry;
 
 
 public class FileUtilsTest {
+	
+	
+	public static void testIndexOf(){
+		
+		List<String> logTypes = new ArrayList<String>();
+		@SuppressWarnings("unchecked")
+		List<LogLevel> levels = LogLevel.getLog4JLevels();
+		for(LogLevel level : levels)
+			logTypes.add((String.format("[%-5s]", level)));
+		
+		String s = "Size of avail pool [INFO ] [09:09:35] SockIOPool:1578- ++++ Size of avail pool for host (172.16.15.80:11215) = 5";
+		int pos = StringUtils.indexOfAny(s,logTypes.toArray(new String[0]) );
+		System.out.println(pos);
+		
+	}
 
 	public void testParseLogEntry(){
 		
@@ -43,12 +61,13 @@ public class FileUtilsTest {
 	public void testReadEvents(){
 		
 		File monitorFile = new File("E:\\back-merchant-web_20160514_091002\\catalina.out");
-		File positionTrackerFilePath = new File("E:\\back-merchant-web_20160514_091002");
+		File positionTrackerFilePath = new File("E:\\back-merchant-web_20160514_091002",Constants.POSITION_FILE_NAME);
 		int capacity = 100;
-		EventReader reader = new FileEventReader
-				.Builder()
+		
+		FileEventReader.Builder builder = new  FileEventReader.Builder();
+		EventReader reader = builder
 				.setMonitorFile(monitorFile)
-				.setPositionTrackerFile(positionTrackerFilePath.getAbsolutePath())
+				.setPositionTrackerFile(positionTrackerFilePath)
 				.setCapacity(capacity)
 				.setBufSize(512)
 				.builder(); 
@@ -57,14 +76,16 @@ public class FileUtilsTest {
 			List<Event> events = reader.readEvents();
 			if(events == null || events.isEmpty())
 				break;
-			//System.out.println("{eventnumber:"+events.size()+",PositionTracker:"+positionTracker);
+			System.out.println("{eventnumber:"+events.size()+",PositionTracker:"+positionTracker);
 			for(Event e : events){
 				
 				byte[] body = e.getBody();
 				String s = new String(body);
+				
 				if(s!=null && s.indexOf("[ERROR]")>-1){
 					System.out.println(s);
 					System.out.println("------------------------------------------------------------");
+					
 				}
 			}
 		}
@@ -80,4 +101,5 @@ public class FileUtilsTest {
 		
 		
 	}
+
 }

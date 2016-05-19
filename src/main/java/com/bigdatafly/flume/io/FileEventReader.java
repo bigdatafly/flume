@@ -39,7 +39,7 @@ public class FileEventReader implements  EventReader{
 	private File monitorFile;
 	private int  capacity;
 	private int bufSize;
-	private String positionTrackerFile;
+	private File positionTrackerFile;
 	private PositionTracker positionTracker;
 
 	private ByteBuffer rBuffer;
@@ -62,22 +62,22 @@ public class FileEventReader implements  EventReader{
 	
 	public FileEventReader(File monitorFile,int capacity){
 		
-		this(monitorFile,DEFAULT_POSITION_TRACKER_FILE_PATH ,capacity,DEFAULT_BUF_SIZE);
+		this(monitorFile,getDefaultPositionTrackerFile() ,capacity,DEFAULT_BUF_SIZE);
 		
 	}
 	
-	public FileEventReader(File monitorFile,String positionTrackerFile){
+	public FileEventReader(File monitorFile,File positionTrackerFile){
 		
 		this(monitorFile,positionTrackerFile,DEFAULT_CAPACITY,DEFAULT_BUF_SIZE);
 	}
 	
-	public FileEventReader(File monitorFile,String positionTrackerFile,int capacity,int bufSize){
+	public FileEventReader(File monitorFile,File positionTrackerFile,int capacity,int bufSize){
 		
 		this(monitorFile,positionTrackerFile,capacity,bufSize,DEFAULT_CHARSET);
 		
 	}
 	
-	public FileEventReader(File monitorFile,String positionTrackerFile,int capacity,int bufSize,Charset charset){
+	public FileEventReader(File monitorFile,File positionTrackerFile,int capacity,int bufSize,Charset charset){
 		
 		this.monitorFile = monitorFile;
 		this.capacity = capacity>0?capacity:DEFAULT_BUF_SIZE;
@@ -320,20 +320,25 @@ public class FileEventReader implements  EventReader{
 		
 	}
 	
+	static File getDefaultPositionTrackerFile(){
+		
+		return new File(DEFAULT_POSITION_TRACKER_FILE_PATH); 
+	}
+	
 	public static class Builder{
 		
 		private File monitorFile;
 		private int  capacity;
 		private int bufSize;
-		private String positionTrackerFile;
+		private File positionTrackerFile;
 		private Charset charset;
 		
 		public  Builder(){
 			
 			this.capacity = DEFAULT_CAPACITY;
 			this.bufSize = DEFAULT_BUF_SIZE;
-			this.positionTrackerFile = DEFAULT_POSITION_TRACKER_FILE_PATH; 
-			
+			this.positionTrackerFile = getDefaultPositionTrackerFile(); 
+			this.charset = Charset.defaultCharset();
 		}
 		
 		public Builder setMonitorFile(File monitorFile){
@@ -354,7 +359,7 @@ public class FileEventReader implements  EventReader{
 			return this;
 		}
 		
-		public  Builder setPositionTrackerFile(String  positionTrackerFile){
+		public  Builder setPositionTrackerFile(File  positionTrackerFile){
 			
 			this.positionTrackerFile = positionTrackerFile;
 			return this;

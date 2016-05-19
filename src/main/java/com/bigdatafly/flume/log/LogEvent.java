@@ -3,6 +3,8 @@
  */
 package com.bigdatafly.flume.log;
 
+import com.bigdatafly.flume.utils.JsonUtils;
+
 /**
  * @author summer
  *
@@ -16,12 +18,8 @@ public class LogEvent extends LogEntry{
 	public static final String LOG_LEVEL_KEY ="loglevel";
 	public static final String LOG_TIME_KEY = "logtime";
 	
-	String   level; 
-	String   logtime;
-	String   log;
 	int len;
 	String ip;
-	
 	
 	public String getLevel() {
 		return level;
@@ -56,7 +54,7 @@ public class LogEvent extends LogEntry{
 	@Override
 	public String toString() {
 		
-		return super.toString();
+		return JsonUtils.toJson(this);
 	}
 	
 	

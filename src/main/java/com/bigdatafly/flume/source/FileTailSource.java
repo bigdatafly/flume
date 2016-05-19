@@ -168,7 +168,7 @@ public class FileTailSource extends AbstractSource implements Configurable,
 		this.reader = new FileEventReader
 				.Builder()
 				.setMonitorFile(coreFile)
-				.setPositionTrackerFile(file.getAbsolutePath())
+				.setPositionTrackerFile(file)
 				.setCapacity(capacity)
 				.setBufSize(512)
 				.setCharset(charset)

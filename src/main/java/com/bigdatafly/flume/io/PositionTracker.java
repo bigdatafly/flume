@@ -12,7 +12,6 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.bigdatafly.flume.common.Constants;
 
 public class PositionTracker implements java.io.Serializable{
 
@@ -27,7 +26,7 @@ public class PositionTracker implements java.io.Serializable{
 	
 	long position;
 	long lastPosition;
-	String file;
+	//String file;
 	File positionTrackerFile;
 	
 	public PositionTracker(String file){
@@ -42,17 +41,14 @@ public class PositionTracker implements java.io.Serializable{
 	
 	public PositionTracker(String file,long position){
 		
-		this.file = file;
+		this.positionTrackerFile = new File(file);
 		this.position = position;
 		this.lastPosition = position;
 	}
 	
 	public PositionTracker(File file,long position){
 		
-		String fileName = "";
-		if(file!=null)
-			fileName = file.getName();
-		this.file = fileName;
+		this.positionTrackerFile = file;
 		this.position = position;
 		this.lastPosition = position;
 	}
@@ -85,9 +81,7 @@ public class PositionTracker implements java.io.Serializable{
 	
 	private void init0() throws IOException{
 		
-		String filePath = this.file + File.separator
-				+ Constants.POSITION_FILE_NAME;
-		positionTrackerFile = new File(filePath);
+		//positionTrackerFile = file;
 		if (!positionTrackerFile.exists()) {
 			try {
 				positionTrackerFile.createNewFile();
@@ -166,18 +160,11 @@ public class PositionTracker implements java.io.Serializable{
 		
 		return ;
 	}
-	
-	public String getFile() {
-		return file;
-	}
-	public void setFile(String file) {
-		this.file = file;
-	}
 
 	@Override
 	public String toString() {
 		
-		return "{file:"+file+",position:"+this.position+",lastPosition:"+this.lastPosition+"}";
+		return "{file:"+positionTrackerFile.getAbsolutePath()+",position:"+this.position+",lastPosition:"+this.lastPosition+"}";
 	}
 	
 	

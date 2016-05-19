@@ -3,16 +3,15 @@ package com.bigdatafly.flume.log;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.lf5.LogLevel;
 
 import com.bigdatafly.flume.utils.JsonUtils;
 
 public class LogEntry {
 
-	String   level; 
-	String   logtime;
-	String   log;
+	protected String   level; 
+	protected String   logtime;
+	protected String   log;
 	
 	public static final String[] logLevels;
 	
@@ -75,22 +74,6 @@ public class LogEntry {
 	public String toString() {
 		
 		return JsonUtils.toJson(this);
-	}
-
-
-
-	public static void main(String[] args){
-		
-		List<String> logTypes = new ArrayList<String>();
-		List<LogLevel> levels = LogLevel.getLog4JLevels();
-		for(LogLevel level : levels)
-			logTypes.add((String.format("[%-5s]", level)));
-		
-		String s = "Size of avail pool [INFO ] [09:09:35] SockIOPool:1578- ++++ Size of avail pool for host (172.16.15.80:11215) = 5";
-		int pos = StringUtils.indexOfAny(s,logTypes.toArray(new String[0]) );
-		System.out.println(pos);
-		
-	}
-	
+	}	
 	
 }
