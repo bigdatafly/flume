@@ -171,6 +171,7 @@ public class FileTailSource extends AbstractSource implements Configurable,
 				.setPositionTrackerFile(file.getAbsolutePath())
 				.setCapacity(capacity)
 				.setBufSize(512)
+				.setCharset(charset)
 				.builder();
 		
 		this.positionTracker = this.reader.getPositionTracker();

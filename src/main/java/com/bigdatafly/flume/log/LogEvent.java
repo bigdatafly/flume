@@ -3,16 +3,11 @@
  */
 package com.bigdatafly.flume.log;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.apache.flume.Event;
-
 /**
  * @author summer
  *
  */
-public class LogEvent extends LogEntry implements Event{
+public class LogEvent extends LogEntry{
 
 	/**
 	 * 
@@ -21,37 +16,50 @@ public class LogEvent extends LogEntry implements Event{
 	public static final String LOG_LEVEL_KEY ="loglevel";
 	public static final String LOG_TIME_KEY = "logtime";
 	
-	Map<String, String> headers;
-	byte[] body;
+	String   level; 
+	String   logtime;
+	String   log;
+	int len;
+	String ip;
 	
-	public LogEvent(){
+	
+	public String getLevel() {
+		return level;
+	}
+	public void setLevel(String level) {
+		this.level = level;
+	}
+	public String getLogtime() {
+		return logtime;
+	}
+	public void setLogtime(String logtime) {
+		this.logtime = logtime;
+	}
+	public String getLog() {
+		return log;
+	}
+	public void setLog(String log) {
+		this.log = log;
+	}
+	public int getLen() {
+		return len;
+	}
+	public void setLen(int len) {
+		this.len = len;
+	}
+	public String getIp() {
+		return ip;
+	}
+	public void setIp(String ip) {
+		this.ip = ip;
+	}
+	@Override
+	public String toString() {
 		
+		return super.toString();
 	}
 	
-
-	public Map<String, String> getHeaders() {
-		
-		return headers;
-	}
-
-	public void setHeaders(Map<String, String> headers) {
-		
-		if(this.headers == null)
-			this.headers = new HashMap<String,String>();
-		if(headers !=null)
-			this.headers = new HashMap<String,String>(headers);
-		
-	}
-
-	public byte[] getBody() {
-		
-		return body;
-	}
-
-	public void setBody(byte[] body) {
-		
-		this.body = body;
-		
-	}
+	
+	
 
 }

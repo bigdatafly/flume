@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,6 +51,10 @@ public class FileEventReader implements  EventReader{
 	static final String ip_addr=OSUtils.getHostIp(OSUtils.getInetAddress());
 	static final String host_name = OSUtils.getHostName(OSUtils.getInetAddress());
 	
+	static final Charset DEFAULT_CHARSET = Charset.defaultCharset();
+	
+	private Charset charset;
+	
 	public FileEventReader(File monitorFile){
 		
 		this(monitorFile,DEFAULT_CAPACITY);
@@ -68,12 +73,19 @@ public class FileEventReader implements  EventReader{
 	
 	public FileEventReader(File monitorFile,String positionTrackerFile,int capacity,int bufSize){
 		
+		this(monitorFile,positionTrackerFile,capacity,bufSize,DEFAULT_CHARSET);
+		
+	}
+	
+	public FileEventReader(File monitorFile,String positionTrackerFile,int capacity,int bufSize,Charset charset){
+		
 		this.monitorFile = monitorFile;
 		this.capacity = capacity>0?capacity:DEFAULT_BUF_SIZE;
 		this.positionTrackerFile = positionTrackerFile;
 		this.positionTracker = getDefaultPositionTracker(this.positionTrackerFile);
 		this.bufSize = bufSize>0?bufSize:DEFAULT_BUF_SIZE;
 		this.rBuffer = ByteBuffer.allocate(bufSize);
+		this.charset = charset;
 	}
 	
 	
@@ -131,21 +143,45 @@ public class FileEventReader implements  EventReader{
 		return events;	
 	}
 
+	/**
+	 * 
+	 * @param logEntry
+	 * @return
+	 * 
+	 * 协议头
+	 * 
+	 * hostname
+	 * ip
+	 * log length
+	 * log level
+	 * log time
+	 * 
+	 * 消息体    长度
+	 * 
+	 * 消息长度  4
+	 * ip    15
+	 * log
+	 */
+	
 	public Event convert(final LogEntry logEntry) {
 		
 		Map<String,String> headers = new HashMap<String,String>();
 		headers.put(LogEvent.LOG_LEVEL_KEY, logEntry.getLevel());
 		headers.put(LogEvent.LOG_TIME_KEY, logEntry.getLogtime());
 		headers.put(Constants.HOST_NAME_HEADER, host_name);
-		long dataLen = 0;
+		int dataLen = 0;
 		String log = logEntry.getLog();
 		dataLen = (log==null)?0:log.length();
 		headers.put(Constants.FLOW_COUNT_HEADER, String.valueOf(dataLen));
-		StringBuffer body = new StringBuffer();
-	    body.append(ip_addr);
-	    body.append(log);
 		
-		return EventBuilder.withBody(body.toString().getBytes(), headers);
+		LogEvent logEvent = new LogEvent();
+		logEvent.setIp(ip_addr);
+		logEvent.setLen(dataLen);
+		logEvent.setLevel(logEntry.getLevel());
+		logEvent.setLogtime(logEntry.getLogtime());
+		logEvent.setLog(log);
+		
+		return EventBuilder.withBody(logEvent.toString().getBytes(charset), headers);
 	}
 	
 	private List<LogEntry> readLogEntry(FileChannel fcin, PositionTracker positionTracker,ByteBuffer rBuffer){
@@ -290,6 +326,7 @@ public class FileEventReader implements  EventReader{
 		private int  capacity;
 		private int bufSize;
 		private String positionTrackerFile;
+		private Charset charset;
 		
 		public  Builder(){
 			
@@ -323,9 +360,17 @@ public class FileEventReader implements  EventReader{
 			return this;
 		}
 		
-		public FileEventReader builder(){
-			return new FileEventReader(monitorFile,positionTrackerFile,capacity,bufSize);
+		public Builder setCharset(Charset charset) {
+			
+			this.charset = charset;
+			return this;
 		}
+		
+		
+		public FileEventReader builder(){
+			return new FileEventReader(monitorFile,positionTrackerFile,capacity,bufSize,charset);
+		}
+
 		
 	}
 
