@@ -3,10 +3,10 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.bigdatafly.flume</groupId>
-  <artifactId>flume-ng-plugin</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <artifactId>flume-filetail-source</artifactId>
+  <version>1.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
-  <name>flume-ng-plugin</name>
+  <name>flume-filetail-source</name>
   <url>http://maven.apache.org</url>
 
   <properties>
