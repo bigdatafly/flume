@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.flume.Event;
 import org.apache.flume.event.EventBuilder;
 import org.slf4j.Logger;

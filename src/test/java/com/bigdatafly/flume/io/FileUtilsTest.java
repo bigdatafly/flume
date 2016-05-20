@@ -61,8 +61,8 @@ public class FileUtilsTest {
 	
 	public void testReadEvents(){
 		
-		File monitorFile = new File("E:\\back-merchant-web_20160514_091002\\catalina.out");
-		File positionTrackerFilePath = new File("E:\\back-merchant-web_20160514_091002",Constants.POSITION_FILE_NAME);
+		File monitorFile = new File("E:\\basics-merchant-service_20160514_091006\\catalina.out");
+		File positionTrackerFilePath = new File("E:\\basics-merchant-service_20160514_091006",Constants.POSITION_FILE_NAME);
 		int capacity = 100;
 		
 		FileEventReader.Builder builder = new  FileEventReader.Builder();
@@ -83,7 +83,7 @@ public class FileUtilsTest {
 				byte[] body = e.getBody();
 				String s = new String(body);
 				
-				if(s!=null && s.indexOf("[ERROR]")>-1){
+				if(s!=null && s.indexOf("DEBUG")<0){
 					System.out.println(s);
 					System.out.println("------------------------------------------------------------");
 					
