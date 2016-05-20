@@ -12,6 +12,7 @@ import org.apache.flume.Event;
 import org.apache.log4j.lf5.LogLevel;
 
 import com.bigdatafly.flume.common.Constants;
+import com.bigdatafly.flume.log.DefaultLog4jParser;
 import com.bigdatafly.flume.log.LogEntry;
 
 /**
@@ -51,7 +52,7 @@ public class FileUtilsTest {
 		sb.append("[DEBUG] [09:09:23] ClientCnxn:756- Got ping response for sessionid: 0x453a360b3c6007f after 0ms");
 		sb.append("[DEBUG] [09:09:23] ClientCnxn:756- Got ping response for sessionid: 0x453a360b3c6007f after 0ms");
 		sb.append("[DEBUG] [09:09:23] ClientCnxn:756- Got ping response for sessionid: 0x453a360b3c6007f after 0ms");
-		for(LogEntry e :new FileEventReader(null).parseLogEntry(sb))
+		for(LogEntry e :new DefaultLog4jParser().parse(sb))
 			System.out.println(e);;
 		System.out.println("******************************************");
 		System.out.println(sb);
