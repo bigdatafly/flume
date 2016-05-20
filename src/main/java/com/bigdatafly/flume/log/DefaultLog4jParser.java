@@ -97,8 +97,8 @@ public class DefaultLog4jParser extends AbstractLog4jParser  implements ILog4jPa
 							int startPos = beginIndex-dateTimeLen>=0 ? beginIndex-dateTimeLen : 0;
 							
 							String strLogEntry = StringUtils.mid(tempStr, startPos, LOG_LEVEL_LEN+endIndex);
-							if(logger.isDebugEnabled())
-								logger.debug("{"+strLogEntry+"}");
+							//if(logger.isDebugEnabled())
+							logger.debug("*************************{"+strLogEntry+"}**************************");
 							LogEntry logEntry = convert(strLogEntry);
 							if(logEntry!=null)
 								logEntries.add(logEntry);
