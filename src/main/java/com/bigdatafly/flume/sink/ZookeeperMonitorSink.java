@@ -232,8 +232,12 @@ public class ZookeeperMonitorSink extends AbstractSink implements Configurable{
 			return monitorMap.get(hostName);
 		else{
 			NodeLog nodeLog= getHostDataFromZK(hostName);
-			if(nodeLog !=null)
-				monitorMap.put(hostName, nodeLog);
+			if(nodeLog ==null){
+				nodeLog = new NodeLog();
+				nodeLog.setHost(hostName);
+				
+			}
+			monitorMap.put(hostName, nodeLog);
 			return nodeLog;
 		}
 	
