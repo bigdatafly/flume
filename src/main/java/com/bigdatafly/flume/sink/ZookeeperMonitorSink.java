@@ -44,6 +44,7 @@ public class ZookeeperMonitorSink extends AbstractSink implements Configurable{
 	private String currentNode;
 	private Long   updateInterval;
 	private Long   lastUpdateTime = 0L;
+	private boolean zkIsInit = false;
 	private final static long DEFAULT_UPDATE_INTERVAL = 10;
 	
 	@Override
@@ -162,7 +163,7 @@ public class ZookeeperMonitorSink extends AbstractSink implements Configurable{
 		String path = currentNode;
 		if(!zookeeper.existsNode(zk, path, true)){
 			
-			zookeeper.createNode(zk, path, JsonUtils.toJson(new NodeLog(hostName)).getBytes(),CreateMode.EPHEMERAL);
+			//zookeeper.createNode(zk, path, JsonUtils.toJson(new NodeLog(hostName)).getBytes(),CreateMode.EPHEMERAL);
 			
 		}else{
 			byte[] byteLog = zookeeper.getData(zk, path, true);
@@ -185,7 +186,12 @@ public class ZookeeperMonitorSink extends AbstractSink implements Configurable{
 		String path = currentNode;
 		
 		try {
-			
+			if(!zkIsInit){
+				if(!zookeeper.existsNode(zk, path, true)){
+					zookeeper.createNode(zk, path, JsonUtils.toJson(new NodeLog(hostName)).getBytes(),CreateMode.EPHEMERAL);
+				}
+				zkIsInit = true;
+			}
 			long flow =  dataFlow ;
 			NodeLog nodeLog = new NodeLog();
 			nodeLog.setHost(hostName);
