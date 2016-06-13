@@ -65,7 +65,7 @@ public class FileUtilsTest {
 		System.out.println(sb);
 	}
 	
-	static Map<String,Integer> stats = Maps.newHashMap();
+	static Map<String,Integer> stats = Maps.newTreeMap();
 	
 	public void testReadEvents(){
 		
