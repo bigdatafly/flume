@@ -80,7 +80,7 @@ public class DefaultLog4jParser extends AbstractLog4jParser  implements ILog4jPa
 				String tempStr = sb.toString();
 				int len = tempStr.length();
 				
-				if(len > logLevelLen){
+				if(len > logLevelLen + LOG_TIME_LEN){
 					beginIndex = StringUtils.indexOfAny(tempStr, logLevels);
 					
 					if(beginIndex <0){
