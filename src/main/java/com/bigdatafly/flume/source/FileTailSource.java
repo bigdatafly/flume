@@ -16,6 +16,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.flume.ChannelException;
 import org.apache.flume.Context;
 import org.apache.flume.Event;
 import org.apache.flume.EventDrivenSource;
@@ -230,10 +231,21 @@ public class FileTailSource extends AbstractSource implements Configurable,
 									break;
 							    }
 							    
-							    commitSize = events.size();
-								channelProcessor.processEventBatch(events);
-								sourceCounter.addToEventAcceptedCount(commitSize);
-								sourceCounter.incrementAppendBatchAcceptedCount();
+							    try{
+								    commitSize = events.size();
+									channelProcessor.processEventBatch(events);
+									/**
+									 * modified at 2016-6-13 17:51 
+									 */
+									reader.getPositionTracker().save();
+									/**
+									 *  modified at 2016-6-13 17:51 
+									 */
+									sourceCounter.addToEventAcceptedCount(commitSize);
+									sourceCounter.incrementAppendBatchAcceptedCount();
+							    }catch(ChannelException ex){
+							    	throw ex;
+							    }
 						 }
 
 					    

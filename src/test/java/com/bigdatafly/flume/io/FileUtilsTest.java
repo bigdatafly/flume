@@ -4,8 +4,12 @@
 package com.bigdatafly.flume.io;
 
 import java.io.File;
+import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.flume.Event;
@@ -14,6 +18,9 @@ import org.apache.log4j.lf5.LogLevel;
 import com.bigdatafly.flume.common.Constants;
 import com.bigdatafly.flume.log.DefaultLog4jParser;
 import com.bigdatafly.flume.log.LogEntry;
+import com.bigdatafly.flume.utils.JsonUtils;
+import com.google.common.collect.Maps;
+
 
 /**
  * @author summer
@@ -58,12 +65,15 @@ public class FileUtilsTest {
 		System.out.println(sb);
 	}
 	
+	static Map<String,Integer> stats = Maps.newHashMap();
 	
 	public void testReadEvents(){
 		
 		File monitorFile = new File("E:\\basics-merchant-service_20160514_091006\\catalina.out");
 		File positionTrackerFilePath = new File("E:\\basics-merchant-service_20160514_091006",Constants.POSITION_FILE_NAME);
 		int capacity = 100;
+		
+		stats.clear();
 		
 		FileEventReader.Builder builder = new  FileEventReader.Builder();
 		EventReader reader = builder
@@ -73,13 +83,39 @@ public class FileUtilsTest {
 				.setBufSize(512)
 				.builder(); 
 		PositionTracker positionTracker = reader.getPositionTracker();
+		
+		String hostName;
+		String logTime;
+		String key;
+		String formatLogTime;
+		int    totalEvents = 0;
+		
 		while(true){
 			List<Event> events = reader.readEvents();
 			if(events == null || events.isEmpty())
 				break;
 			System.out.println("{eventnumber:"+events.size()+",PositionTracker:"+positionTracker);
+			totalEvents += events.size();
 			for(Event e : events){
+				Map<String,Object> eventMap = toMap(e);
+				hostName = eventMap.get("ip").toString();
+				logTime =  eventMap.get("logtime").toString();
+				formatLogTime = toDate0(logTime);
 				
+//				if(StringUtils.isEmpty(logTime) || 
+//						StringUtils.isEmpty(formatLogTime) ||
+//						logTime.length() != 23 ||
+//						formatLogTime.length() <12){
+//					System.out.println("error => {logtime:" + logTime +",formatLogTime:"+formatLogTime);
+//					
+//				}
+				
+				key = "3032"+ formatLogTime;
+				if(stats.containsKey(key))
+					stats.put(key, stats.get(key) +1);
+				else
+					stats.put(key, 1);
+				/*
 				byte[] body = e.getBody();
 				String s = new String(body);
 				
@@ -87,11 +123,41 @@ public class FileUtilsTest {
 					System.out.println(s);
 					System.out.println("------------------------------------------------------------");
 					
-				}
+				}*/
 			}
+		}
+		System.out.println("------------------------------------------------------------");
+		
+		System.out.println("----------------------totalEvents:"+totalEvents+"-----------------------------------");
+		
+		for(Map.Entry<String, Integer> e : stats.entrySet()){
+			
+			System.out.println(e.getKey()+"==================>"+e.getValue());
 		}
 	}
 	
+	private Map<String,Object> toMap(Event event){
+		
+		byte[] body = event.getBody();
+		if(body == null)
+			return Maps.newHashMap();
+		@SuppressWarnings("unchecked")
+		Map<String,Object> map = JsonUtils.fromJson(new String(body,Charset.defaultCharset()), Map.class);
+		return map;
+	}
+	
+	public static String toDate0(String date){
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
+		
+		if(StringUtils.isEmpty(date))
+			return sdf.format(new Date());
+		int pos = date.lastIndexOf(":");
+		if(pos == -1)
+			return sdf.format(new Date());
+		date = date.substring(0,pos);
+		return date.replaceAll("[\\s|:|-]+", "");
+		
+	}
 	
 	public static void main(String[] args){
 		

@@ -80,10 +80,10 @@ public class DefaultLog4jParser extends AbstractLog4jParser  implements ILog4jPa
 				String tempStr = sb.toString();
 				int len = tempStr.length();
 				
-				if(len > logLevelLen + LOG_TIME_LEN){
+				if(len > logLevelLen + dateTimeLen){
 					beginIndex = StringUtils.indexOfAny(tempStr, logLevels);
 					
-					if(beginIndex <0){
+					if(beginIndex <0 ){
 						sb.delete(0, len);
 						break;
 					}
@@ -95,14 +95,17 @@ public class DefaultLog4jParser extends AbstractLog4jParser  implements ILog4jPa
 						}else{
 							
 							int startPos = beginIndex-dateTimeLen>=0 ? beginIndex-dateTimeLen : 0;
+							int endPos = endIndex-dateTimeLen + LOG_LEVEL_LEN + Math.min(beginIndex, dateTimeLen);
+							if(startPos >=0){
+								String strLogEntry = StringUtils.mid(tempStr, startPos, endPos);
+								if(logger.isDebugEnabled())
+									logger.debug("*************************{"+strLogEntry+"}**************************");
+								LogEntry logEntry = convert(strLogEntry);
+								if(logEntry!=null)
+									logEntries.add(logEntry);
+								sb.delete(0, beginIndex + LOG_LEVEL_LEN+endIndex - dateTimeLen);
+							}
 							
-							String strLogEntry = StringUtils.mid(tempStr, startPos, LOG_LEVEL_LEN+endIndex);
-							//if(logger.isDebugEnabled())
-							logger.debug("*************************{"+strLogEntry+"}**************************");
-							LogEntry logEntry = convert(strLogEntry);
-							if(logEntry!=null)
-								logEntries.add(logEntry);
-							sb.delete(0, beginIndex + LOG_LEVEL_LEN+endIndex - dateTimeLen);
 							
 						}
 					}
@@ -132,16 +135,27 @@ public class DefaultLog4jParser extends AbstractLog4jParser  implements ILog4jPa
 				return null;
 			int pos = 0;
 			pos = StringUtils.indexOfAny(log, logLevels);
-			if(pos == -1)
+			if(pos< 1)
 				return null;
 			
 			String level = StringUtils.substring(log, pos, pos + LOG_LEVEL_LEN);
-			String time = StringUtils.substring(log,0,LOG_TIME_LEN);
+			String time = StringUtils.substring(log,0,pos-1);
 			
 			String tempStr = StringUtils.substring(log,pos + LOG_LEVEL_LEN+LOG_SPACE_DELIMITER.length());
 			pos = StringUtils.indexOf(tempStr, LOG_SPACE_DELIMITER);
 			if(pos == -1)
 				return null;
+			
+//////////////////////////////////
+//String formatLogTime = toDate0(time);
+//if(StringUtils.isEmpty(time) || 
+//	StringUtils.isEmpty(formatLogTime) ||
+//	time.length() != 23 ||
+//	formatLogTime.length() <12){
+//System.out.println("error => {log:"+log+",logtime:" + time +",formatLogTime:"+formatLogTime);
+//
+//}
+//////////////////////////////////
 			
 			if(StringUtils.length(time) ==0 || StringUtils.length(time) < LOG_TIME_LEN)
 				return null;
@@ -152,5 +166,18 @@ public class DefaultLog4jParser extends AbstractLog4jParser  implements ILog4jPa
 			return entry;
 		
 	}
+	
+//	public static String toDate0(String date){
+//		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
+//		
+//		if(StringUtils.isEmpty(date))
+//			return sdf.format(new Date());
+//		int pos = date.lastIndexOf(":");
+//		if(pos == -1)
+//			return sdf.format(new Date());
+//		date = date.substring(0,pos);
+//		return date.replaceAll("[\\s|:|-]+", "");
+//		
+//	}
 
 }

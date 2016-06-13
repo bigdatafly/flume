@@ -233,15 +233,16 @@ public class FileEventReader implements  EventReader{
 			     
 			      position += buf_size;
 			     
-			      positionTracker.mark(position);
-			      positionTracker.save();
+			      //positionTracker.mark(position);
+			      positionTracker.mark(position - strBuf.length());
+			      //positionTracker.save();
 			}	
 		
 		} catch (IOException e) { 
 			
 			e.printStackTrace(); 
 			positionTracker.reset();
-			positionTracker.save();
+			//positionTracker.save();
 		} 
 		
 		return logEntries;
