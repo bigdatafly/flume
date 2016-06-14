@@ -68,9 +68,12 @@ public class FileUtilsTest {
 	static Map<String,Integer> stats = Maps.newTreeMap();
 	
 	public void testReadEvents(){
+		//String folder = "E:\\back-merchant-web_20160514_091002";
+		String folder = "E:\\basics-merchant-service_20160514_091006";
+		String file = "catalina.out";
 		
-		File monitorFile = new File("E:\\basics-merchant-service_20160514_091006\\catalina.out");
-		File positionTrackerFilePath = new File("E:\\basics-merchant-service_20160514_091006",Constants.POSITION_FILE_NAME);
+		File monitorFile = new File(folder,file);
+		File positionTrackerFilePath = new File(folder,Constants.POSITION_FILE_NAME);
 		int capacity = 100;
 		
 		stats.clear();

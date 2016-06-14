@@ -11,6 +11,8 @@ import org.apache.log4j.lf5.LogLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.bigdatafly.flume.utils.Utils;
+
 
 /**
  * @author summer
@@ -157,7 +159,7 @@ public class DefaultLog4jParser extends AbstractLog4jParser  implements ILog4jPa
 //}
 //////////////////////////////////
 			
-			if(StringUtils.length(time) ==0 || StringUtils.length(time) < LOG_TIME_LEN)
+			if(!Utils.isDate(time)|| !Utils.isDate(time) || StringUtils.length(time)< LOG_TIME_LEN)
 				return null;
 			LogEntry entry = new LogEntry();
 			entry.setLevel(level);
@@ -167,17 +169,6 @@ public class DefaultLog4jParser extends AbstractLog4jParser  implements ILog4jPa
 		
 	}
 	
-//	public static String toDate0(String date){
-//		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
-//		
-//		if(StringUtils.isEmpty(date))
-//			return sdf.format(new Date());
-//		int pos = date.lastIndexOf(":");
-//		if(pos == -1)
-//			return sdf.format(new Date());
-//		date = date.substring(0,pos);
-//		return date.replaceAll("[\\s|:|-]+", "");
-//		
-//	}
+	
 
 }
